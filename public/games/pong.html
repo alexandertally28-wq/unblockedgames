@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Pong Championship</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #060911;
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      touch-action: none;
+    }
+    .hud {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      max-width: 500px;
+      padding: 10px 16px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .score-p1 { color: #38bdf8; font-size: 22px; }
+    .score-p2 { color: #f43f5e; font-size: 22px; }
+    #canvas-wrap {
+      position: relative;
+      width: 500px;
+      height: 380px;
+      max-width: 95vw;
+      max-height: 75vh;
+      background: #0a0f1d;
+      border: 2px solid #1e293b;
+      border-radius: 12px;
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.1);
+      overflow: hidden;
+    }
+    canvas { width: 100%; height: 100%; display: block; }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 15, 29, 0.92);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      text-align: center;
+      padding: 24px;
+    }
+    .overlay.hidden { display: none; }
+    .btn {
+      background: #0284c7;
+      color: white;
+      border: none;
+      padding: 10px 22px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn:hover { background: #0369a1; }
+    .mode-select {
+      display: flex;
+      gap: 8px;
+    }
+    .m-btn {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .m-btn.active {
+      background: #0369a1;
+      color: white;
+      border-color: #38bdf8;
+    }
+    .instructions {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div>PLAYER: <span class="score-p1" id="p1Score">0</span></div>
+    <div>CPU / P2: <span class="score-p2" id="p2Score">0</span></div>
+  </div>
+
+  <div id="canvas-wrap">
+    <canvas id="gameCanvas" width="500" height="380"></canvas>
+    <div id="startOverlay" class="overlay">
+      <h2 style="font-size: 26px; color: #38bdf8;">PONG CHAMPIONSHIP</h2>
+      <div class="mode-select">
+        <button class="m-btn active" id="btn1P">1 Player (vs CPU)</button>
+        <button class="m-btn" id="btn2P">2 Players (Local)</button>
+      </div>
+      <button class="btn" id="startBtn">SERVE BALL</button>
+    </div>
+    <div id="gameOverOverlay" class="overlay hidden">
+      <h2 id="winnerText" style="font-size: 26px; color: #38bdf8;">PLAYER 1 WINS!</h2>
+      <button class="btn" id="restartBtn">REMATCH</button>
+    </div>
+  </div>
+
+  <div class="instructions" id="instructionsText">
+    [W / S or Up / Down] Move Paddle · First to 7 points wins!
+  </div>
+
+  <script>
+    let audioCtx = null;
+    function beep(freq, duration = 0.05) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const p1ScoreEl = document.getElementById('p1Score');
+    const p2ScoreEl = document.getElementById('p2Score');
+    const startOverlay = document.getElementById('startOverlay');
+    const gameOverOverlay = document.getElementById('gameOverOverlay');
+    const winnerText = document.getElementById('winnerText');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const btn1P = document.getElementById('btn1P');
+    const btn2P = document.getElementById('btn2P');
+    const instructionsText = document.getElementById('instructionsText');
+
+    let is2Player = false;
+    let p1Score = 0;
+    let p2Score = 0;
+    let isRunning = false;
+    let animId = null;
+
+    const p1 = { x: 18, y: 150, w: 10, h: 70, dy: 0, speed: 6 };
+    const p2 = { x: 472, y: 150, w: 10, h: 70, dy: 0, speed: 5 };
+    const ball = { x: 250, y: 190, r: 6, dx: 5, dy: 3 };
+
+    const keys = {};
+
+    btn1P.addEventListener('click', () => {
+      is2Player = false;
+      btn1P.classList.add('active');
+      btn2P.classList.remove('active');
+      instructionsText.textContent = "[W / S or Up / Down] Move Paddle · First to 7 wins!";
+    });
+
+    btn2P.addEventListener('click', () => {
+      is2Player = true;
+      btn2P.classList.add('active');
+      btn1P.classList.remove('active');
+      instructionsText.textContent = "P1: [W / S] · P2: [Up / Down Arrows] · First to 7 wins!";
+    });
+
+    function resetBall(direction = 1) {
+      ball.x = canvas.width / 2;
+      ball.y = canvas.height / 2;
+      ball.dx = (Math.random() * 2 + 4.5) * direction;
+      ball.dy = (Math.random() - 0.5) * 5;
+    }
+
+    function resetGame() {
+      p1Score = 0;
+      p2Score = 0;
+      p1ScoreEl.textContent = '0';
+      p2ScoreEl.textContent = '0';
+      p1.y = 150;
+      p2.y = 150;
+      resetBall(Math.random() > 0.5 ? 1 : -1);
+      startOverlay.classList.add('hidden');
+      gameOverOverlay.classList.add('hidden');
+      isRunning = true;
+      if (animId) cancelAnimationFrame(animId);
+      loop();
+    }
+
+    function loop() {
+      if (!isRunning) return;
+
+      // P1 input
+      if (keys['w'] || (!is2Player && keys['arrowup'])) p1.y = Math.max(0, p1.y - p1.speed);
+      if (keys['s'] || (!is2Player && keys['arrowdown'])) p1.y = Math.min(canvas.height - p1.h, p1.y + p1.speed);
+
+      // P2 / CPU input
+      if (is2Player) {
+        if (keys['arrowup']) p2.y = Math.max(0, p2.y - p2.speed);
+        if (keys['arrowdown']) p2.y = Math.min(canvas.height - p2.h, p2.y + p2.speed);
+      } else {
+        // AI movement with reaction delay
+        const target = ball.y - p2.h / 2;
+        if (ball.dx > 0) {
+          if (p2.y + p2.h / 2 < ball.y - 4) p2.y += p2.speed;
+          else if (p2.y + p2.h / 2 > ball.y + 4) p2.y -= p2.speed;
+        }
+        p2.y = Math.max(0, Math.min(canvas.height - p2.h, p2.y));
+      }
+
+      // Ball physics
+      ball.x += ball.dx;
+      ball.y += ball.dy;
+
+      // Top / bottom bounce
+      if (ball.y - ball.r <= 0 || ball.y + ball.r >= canvas.height) {
+        ball.dy = -ball.dy;
+        beep(300);
+      }
+
+      // Paddle 1 collision
+      if (
+        ball.x - ball.r <= p1.x + p1.w &&
+        ball.x + ball.r >= p1.x &&
+        ball.y >= p1.y &&
+        ball.y <= p1.y + p1.h
+      ) {
+        ball.x = p1.x + p1.w + ball.r;
+        const hit = (ball.y - (p1.y + p1.h / 2)) / (p1.h / 2);
+        ball.dx = Math.min(9, Math.abs(ball.dx) * 1.05);
+        ball.dy = hit * 6;
+        beep(480);
+      }
+
+      // Paddle 2 collision
+      if (
+        ball.x + ball.r >= p2.x &&
+        ball.x - ball.r <= p2.x + p2.w &&
+        ball.y >= p2.y &&
+        ball.y <= p2.y + p2.h
+      ) {
+        ball.x = p2.x - ball.r;
+        const hit = (ball.y - (p2.y + p2.h / 2)) / (p2.h / 2);
+        ball.dx = -Math.min(9, Math.abs(ball.dx) * 1.05);
+        ball.dy = hit * 6;
+        beep(440);
+      }
+
+      // Scoring
+      if (ball.x < 0) {
+        p2Score++;
+        p2ScoreEl.textContent = p2Score;
+        beep(220, 0.2);
+        if (p2Score >= 7) return endGame(is2Player ? "PLAYER 2 WINS!" : "CPU WINS!");
+        resetBall(1);
+      } else if (ball.x > canvas.width) {
+        p1Score++;
+        p1ScoreEl.textContent = p1Score;
+        beep(600, 0.2);
+        if (p1Score >= 7) return endGame("PLAYER 1 WINS!");
+        resetBall(-1);
+      }
+
+      draw();
+      animId = requestAnimationFrame(loop);
+    }
+
+    function endGame(text) {
+      isRunning = false;
+      winnerText.textContent = text;
+      winnerText.style.color = p1Score >= 7 ? '#38bdf8' : '#f43f5e';
+      gameOverOverlay.classList.remove('hidden');
+    }
+
+    function draw() {
+      ctx.fillStyle = '#0a0f1d';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Center dashed line
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 8]);
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2, 0);
+      ctx.lineTo(canvas.width / 2, canvas.height);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // P1 Paddle
+      ctx.fillStyle = '#38bdf8';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#0284c7';
+      ctx.beginPath();
+      ctx.roundRect(p1.x, p1.y, p1.w, p1.h, 4);
+      ctx.fill();
+
+      // P2 Paddle
+      ctx.fillStyle = '#f43f5e';
+      ctx.shadowColor = '#e11d48';
+      ctx.beginPath();
+      ctx.roundRect(p2.x, p2.y, p2.w, p2.h, 4);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Ball
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    window.addEventListener('keydown', (e) => {
+      keys[e.key.toLowerCase()] = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+      keys[e.key.toLowerCase()] = false;
+    });
+
+    // Touch control for mobile
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const touchY = (e.touches[0].clientY - rect.top) * (canvas.height / rect.height);
+      p1.y = Math.max(0, Math.min(canvas.height - p1.h, touchY - p1.h / 2));
+    }, { passive: false });
+
+    startBtn.addEventListener('click', resetGame);
+    restartBtn.addEventListener('click', resetGame);
+
+    draw();
+  </script>
+</body>
+</html>

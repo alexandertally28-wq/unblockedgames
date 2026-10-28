@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Cyber Reactor Clicker</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #090d16;
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 12px;
+      user-select: none;
+    }
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .hud {
+      text-align: center;
+    }
+    .score-title { font-size: 13px; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
+    .score-val { font-size: 34px; font-weight: 900; color: #38bdf8; text-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }
+    .cps-val { font-size: 14px; color: #10b981; font-weight: 600; }
+
+    #core-btn {
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #38bdf8 0%, #0284c7 60%, #0c4a6e 100%);
+      border: 4px solid #7dd3fc;
+      box-shadow: 0 0 35px rgba(56, 189, 248, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+      position: relative;
+    }
+    #core-btn:active {
+      transform: scale(0.93);
+      box-shadow: 0 0 50px rgba(56, 189, 248, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.6);
+    }
+    .upgrades {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .upgrade-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1e293b;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .upgrade-item:hover:not(.disabled) { background: #28374e; }
+    .upgrade-item.disabled { opacity: 0.45; cursor: not-allowed; }
+    .upg-info { display: flex; flex-direction: column; }
+    .upg-name { font-weight: 700; font-size: 13px; color: #f8fafc; }
+    .upg-desc { font-size: 11px; color: #94a3b8; }
+    .upg-cost { font-weight: 800; font-size: 13px; color: #f59e0b; }
+    .floating-text {
+      position: absolute;
+      pointer-events: none;
+      font-size: 18px;
+      font-weight: 800;
+      color: #38bdf8;
+      animation: floatUp 0.8s forwards;
+    }
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-50px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hud">
+      <div class="score-title">Quantum Energy</div>
+      <div class="score-val" id="score">0</div>
+      <div class="cps-val" id="cps">+0 per second</div>
+    </div>
+
+    <div id="core-btn">⚡</div>
+
+    <div class="upgrades" id="upgradeList"></div>
+  </div>
+
+  <script>
+    let audioCtx = null;
+    function playClick() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(500 + Math.random() * 200, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+      } catch (e) {}
+    }
+
+    let energy = parseFloat(localStorage.getItem('clicker_energy') || '0');
+    let clickPower = 1;
+    const upgrades = [
+      { id: 'tap', name: 'Superconductor Click', cost: 15, count: 0, mult: 1, type: 'click', desc: '+1 per click' },
+      { id: 'miner', name: 'Quantum Nano-Bot', cost: 50, count: 0, cps: 2, type: 'cps', desc: '+2 energy/sec' },
+      { id: 'array', name: 'Plasma Solar Array', cost: 250, count: 0, cps: 12, type: 'cps', desc: '+12 energy/sec' },
+      { id: 'fusion', name: 'Fusion Reactor', cost: 1200, count: 0, cps: 65, type: 'cps', desc: '+65 energy/sec' },
+      { id: 'antimatter', name: 'Antimatter Collider', cost: 6000, count: 0, cps: 350, type: 'cps', desc: '+350 energy/sec' }
+    ];
+
+    const scoreEl = document.getElementById('score');
+    const cpsEl = document.getElementById('cps');
+    const coreBtn = document.getElementById('core-btn');
+    const upgradeListEl = document.getElementById('upgradeList');
+
+    function getCps() {
+      return upgrades.reduce((sum, u) => sum + (u.type === 'cps' ? u.count * u.cps : 0), 0);
+    }
+
+    function renderUpgrades() {
+      upgradeListEl.innerHTML = '';
+      const totalCps = getCps();
+      upgrades.forEach(u => {
+        const item = document.createElement('div');
+        item.className = 'upgrade-item' + (energy < u.cost ? ' disabled' : '');
+        item.innerHTML = `
+          <div class="upg-info">
+            <span class="upg-name">${u.name} (x${u.count})</span>
+            <span class="upg-desc">${u.desc}</span>
+          </div>
+          <div class="upg-cost">${Math.floor(u.cost)} ⚡</div>
+        `;
+        item.addEventListener('click', () => buyUpgrade(u));
+        upgradeListEl.appendChild(item);
+      });
+    }
+
+    function buyUpgrade(u) {
+      if (energy >= u.cost) {
+        energy -= u.cost;
+        u.count++;
+        u.cost = Math.floor(u.cost * 1.25);
+        if (u.type === 'click') clickPower += u.mult;
+        updateDisplay();
+        renderUpgrades();
+        playClick();
+      }
+    }
+
+    function updateDisplay() {
+      scoreEl.textContent = Math.floor(energy).toLocaleString();
+      const currentCps = getCps();
+      cpsEl.textContent = `+${currentCps.toLocaleString()} per second`;
+    }
+
+    coreBtn.addEventListener('click', (e) => {
+      energy += clickPower;
+      updateDisplay();
+      renderUpgrades();
+      playClick();
+
+      // Spawn floating +text
+      const floatEl = document.createElement('div');
+      floatEl.className = 'floating-text';
+      floatEl.textContent = `+${clickPower}`;
+      floatEl.style.left = `${e.clientX - 20}px`;
+      floatEl.style.top = `${e.clientY - 30}px`;
+      document.body.appendChild(floatEl);
+      setTimeout(() => floatEl.remove(), 800);
+    });
+
+    // Auto income loop
+    setInterval(() => {
+      const cps = getCps();
+      if (cps > 0) {
+        energy += cps / 10;
+        updateDisplay();
+        renderUpgrades();
+        localStorage.setItem('clicker_energy', energy.toString());
+      }
+    }, 100);
+
+    renderUpgrades();
+    updateDisplay();
+  </script>
+</body>
+</html>

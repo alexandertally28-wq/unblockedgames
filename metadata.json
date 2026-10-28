@@ -2,5 +2,7 @@
   "name": "Nexus Unblocked Games & Browser",
   "description": "Unblocked games arcade and sandbox browser portal with embeddable iframe games, customizable tabs, bookmarks, and stealth cloaking.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

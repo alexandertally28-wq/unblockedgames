@@ -248,7 +248,7 @@ export default function UnblockBrowser() {
   const isBookmarked = savedBookmarks.some(b => b.url === activeTab.url);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-7xl mx-auto px-2 sm:px-6 py-3">
+    <div className="flex-1 flex flex-col h-[calc(100vh-3.5rem)] w-full max-w-7xl mx-auto px-2 sm:px-6 py-2.5">
       {/* Browser Main Window Container */}
       <div className="flex-1 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
         

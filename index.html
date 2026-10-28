@@ -11,9 +11,23 @@
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" id="dynamic-favicon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2306b6d4'><path d='M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z'/></svg>" />
   </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+  <body class="bg-[#070a12] text-slate-100">
+    <div id="root">
+      <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #070a12; color: #94a3b8; font-family: system-ui, -apple-system, sans-serif;">
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(6, 182, 212, 0.1); border: 1.5px solid rgba(6, 182, 212, 0.3); display: flex; align-items: center; justify-content: center; color: #06b6d4; font-size: 22px; margin-bottom: 16px;">
+          🌐
+        </div>
+        <div style="font-size: 16px; font-weight: 700; color: #f8fafc; margin-bottom: 6px;">Loading Nexus Unblock Browser...</div>
+        <div style="font-size: 12px; color: #64748b;">Initializing multi-tab web sandbox and stealth engine</div>
+      </div>
+    </div>
+    <noscript>
+      <div style="padding: 24px; text-align: center; color: #f8fafc; background: #0f172a; font-family: sans-serif;">
+        <h2>JavaScript Required</h2>
+        <p>Please enable JavaScript in your browser to run Nexus Unblocked Games & Browser.</p>
+      </div>
+    </noscript>
+    <script type="module" src="./src/main.jsx"></script>
   </body>
 </html>
 

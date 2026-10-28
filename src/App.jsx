@@ -74,23 +74,26 @@ export default function App() {
             <div className="w-full flex flex-col items-center text-center mb-8">
               <div className="inline-flex items-center gap-2 text-xs font-mono text-cyan-400 mb-2 bg-cyan-950/60 border border-cyan-800/40 px-2.5 py-1 rounded-md">
                 <Zap className="w-3.5 h-3.5" />
-                <span>OFFICIAL CRAZYGAMES IFRAME EMBED</span>
+                <span>UNBLOCKED IFRAME & PROXY REGISTRY</span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-2">
-                Space Waves
+                Unblocked Games & Proxies
               </h1>
               <p className="text-sm text-slate-400 max-w-lg leading-relaxed">
-                Pilot the arrow in an adrenaline-pumping zigzag wave through dangerous geometric courses. Play the full embed below or in theater mode!
+                Launch Space Waves or access SillyPup Proxy (sillypup.cfd) directly in theater mode or via the Unblock Browser tabs.
               </p>
             </div>
 
-            {/* Space Waves Card */}
-            {spaceWavesGame && (
-              <GameCard
-                game={spaceWavesGame}
-                onPlay={(g) => setSelectedGame(g)}
-              />
-            )}
+            {/* Games & Proxies Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+              {gamesData.map(game => (
+                <GameCard
+                  key={game.id}
+                  game={game}
+                  onPlay={(g) => setSelectedGame(g)}
+                />
+              ))}
+            </div>
           </div>
         )}
       </main>

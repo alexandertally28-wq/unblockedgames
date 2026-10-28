@@ -71,8 +71,10 @@ export default function Navbar({
             }`}
           >
             <Gamepad2 className="w-3.5 h-3.5" />
-            <span>Space Waves</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span>Games & Proxies</span>
+            <span className="text-[10px] bg-cyan-950 text-cyan-300 font-bold px-1.5 py-0.2 rounded border border-cyan-800">
+              2
+            </span>
           </button>
         </div>
 

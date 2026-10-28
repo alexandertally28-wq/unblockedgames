@@ -22,6 +22,12 @@ import {
 
 const DEFAULT_QUICK_LINKS = [
   { 
+    name: 'SillyPup', 
+    url: 'https://sillypup.cfd', 
+    desc: 'SillyPup Web Proxy & Unblock Portal', 
+    icon: '🐶' 
+  },
+  { 
     name: 'Space Waves', 
     url: 'https://www.crazygames.com/embed/space-waves', 
     desc: 'CrazyGames Wave Runner', 

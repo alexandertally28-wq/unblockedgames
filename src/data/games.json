@@ -1,5 +1,23 @@
 [
   {
+    "id": "sillypup",
+    "title": "SillyPup Proxy",
+    "category": "Web Proxy",
+    "description": "SillyPup fast unblock web proxy and games mirror portal (sillypup.cfd).",
+    "controls": [
+      "Navigate to sillypup.cfd",
+      "Enter any URL in the proxy bar for unblocked browsing",
+      "Open in stealth about:blank window if needed"
+    ],
+    "iframeSrc": "https://sillypup.cfd",
+    "originalUrl": "https://sillypup.cfd",
+    "rating": 4.98,
+    "plays": 195000,
+    "tags": ["SillyPup", "Proxy", "Unblock", "Web", "cfd"],
+    "badge": "Web Proxy",
+    "accentColor": "#f59e0b"
+  },
+  {
     "id": "space-waves",
     "title": "Space Waves",
     "category": "Arcade",

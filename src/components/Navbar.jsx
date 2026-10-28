@@ -1,14 +1,16 @@
 import React from 'react';
 import { 
   Globe, 
+  Gamepad2,
   ShieldAlert, 
   Maximize2, 
   Minimize2,
-  ShieldCheck,
-  Lock
+  Zap
 } from 'lucide-react';
 
 export default function Navbar({
+  activeView,
+  setActiveView,
   onOpenStealthModal,
   panicKey,
   onTriggerPanic
@@ -29,26 +31,49 @@ export default function Navbar({
     <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
         {/* Brand */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-sm">
+        <div 
+          onClick={() => setActiveView('browser')}
+          className="flex items-center gap-2.5 cursor-pointer group shrink-0"
+        >
+          <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-all shadow-sm">
             <Globe className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="font-extrabold tracking-tight text-white text-base">NEXUS</span>
               <span className="text-[10px] font-bold text-cyan-400 bg-cyan-950/80 px-1.5 py-0.5 rounded border border-cyan-800/60 uppercase tracking-widest">
-                UNBLOCK BROWSER
+                PORTAL
               </span>
             </div>
           </div>
         </div>
 
-        {/* Center Sandbox Status Badge */}
-        <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 bg-slate-900/90 border border-slate-800 px-3 py-1 rounded-full">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-          <span className="font-medium text-slate-300">Sandbox Isolation Active</span>
-          <span aria-hidden="true" className="text-slate-600">·</span>
-          <span className="text-[11px] font-mono text-cyan-400">Multi-Tab Engine</span>
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+          <button
+            onClick={() => setActiveView('browser')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              activeView === 'browser'
+                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>Browser</span>
+          </button>
+
+          <button
+            onClick={() => setActiveView('games')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              activeView === 'games'
+                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Gamepad2 className="w-3.5 h-3.5" />
+            <span>Space Waves</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+          </button>
         </div>
 
         {/* Action Controls */}
@@ -60,7 +85,7 @@ export default function Navbar({
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-400 bg-emerald-950/40 hover:bg-emerald-950/80 border border-emerald-800/50 rounded-lg transition-colors cursor-pointer"
           >
             <ShieldAlert className="w-3.5 h-3.5" />
-            <span>Tab Stealth</span>
+            <span className="hidden sm:inline">Stealth</span>
           </button>
 
           {/* Panic Key trigger */}

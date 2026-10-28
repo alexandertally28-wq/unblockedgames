@@ -22,6 +22,12 @@ import {
 
 const DEFAULT_QUICK_LINKS = [
   { 
+    name: 'Space Waves', 
+    url: 'https://www.crazygames.com/embed/space-waves', 
+    desc: 'CrazyGames Wave Runner', 
+    icon: '⚡' 
+  },
+  { 
     name: 'DuckDuckGo', 
     url: 'https://html.duckduckgo.com/html/', 
     desc: 'Private Search Engine', 

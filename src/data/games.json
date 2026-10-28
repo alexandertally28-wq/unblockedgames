@@ -1,0 +1,21 @@
+[
+  {
+    "id": "space-waves",
+    "title": "Space Waves",
+    "category": "Arcade",
+    "description": "Navigate your arrow in an intense zigzag wave through hazardous geometric neon obstacles at supersonic speed.",
+    "controls": [
+      "Click or Hold Spacebar to ascend at 45°",
+      "Release to dive down at 45°",
+      "Avoid all walls, gears, and geometric spikes"
+    ],
+    "iframeSrc": "https://www.crazygames.com/embed/space-waves",
+    "fallbackSrc": "./games/space-waves.html",
+    "originalUrl": "https://www.crazygames.com/game/space-waves",
+    "rating": 4.95,
+    "plays": 145000,
+    "tags": ["Space Waves", "CrazyGames", "Geometry", "Skill", "Reflex", "Wave"],
+    "badge": "CrazyGames",
+    "accentColor": "#06b6d4"
+  }
+]
